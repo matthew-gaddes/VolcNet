@@ -1,0 +1,9 @@
+[transient_deformation_00]
+def_lon_west = -91.45
+def_lon_east = -91.20
+def_lat_south = -1.02
+def_lat_north = -0.90
+def_magnitude = 0.5
+def_episode_start = 20161213
+def_episode_stop = 20170331
+source = sill

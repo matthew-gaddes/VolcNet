@@ -6,6 +6,7 @@ def_lat_north = -36.59
 def_rate = 0.1
 def_episode_start = 20141031
 def_episode_stop = 20151231
+source = sill
 
 [persistent_deformation_01]
 def_lon_west = -70.48
@@ -15,6 +16,7 @@ def_lat_north = -36.59
 def_rate = 0.13
 def_episode_start = 20160101
 def_episode_stop = 20181231
+source = sill
 
 [persistent_deformation_02]
 def_lon_west = -70.48
@@ -24,6 +26,7 @@ def_lat_north = -36.59
 def_rate = 0.05
 def_episode_start = 20190101
 def_episode_stop = 20191231
+source = sill
 
 [persistent_deformation_03]
 def_lon_west = -70.48
@@ -33,3 +36,4 @@ def_lat_north = -36.59
 def_rate = -0.04
 def_episode_start = 20200101
 def_episode_stop = 20201231
+source = sill

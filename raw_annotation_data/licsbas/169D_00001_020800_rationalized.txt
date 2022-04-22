@@ -6,3 +6,4 @@ def_lat_north = 28.62
 def_magnitude = 0.25
 def_episode_start = 20210916
 def_episode_stop = 20210922
+source = sill
