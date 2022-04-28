@@ -16,6 +16,8 @@ import pdb
 import pickle
 import glob
 import os
+from datetime import datetime
+import matplotlib.gridspec as gridspec
 
 # MEG debug imports
 sys.path.append("/home/matthew/university_work/python_stuff/python_scripts")
@@ -93,8 +95,10 @@ figsize = 10
 
 volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')), key = os.path.getmtime)            # get the paths to the mat files from fabien
 
-for volcnet_file in volcnet_files[1:2]:
-    print("TESTING - only using Campi Flegrei volcnet file.  ")
+# for volcnet_file in volcnet_files[1:2]:
+#     print("TESTING - only using Campi Flegrei volcnet file.  ")
+for volcnet_file in volcnet_files[11:12]:
+    print("TESTING - only using Wolf volcnet file.  ")
     print(volcnet_file)
     
     
@@ -102,10 +106,10 @@ for volcnet_file in volcnet_files[1:2]:
     with open(volcnet_file, 'rb') as f:
         displacement_r3 = pickle.load(f)
         tbaseline_info = pickle.load(f)
-        persistent_def = pickle.load(f)
-        transient_def = pickle.load(f)
+        persistent_defs = pickle.load(f)
+        transient_defs = pickle.load(f)
 
-    ifg_resolution = 10
+    ifg_resolution = 20
     acq_spacing = 5
    
     n_acq, ny, nx = displacement_r3['cumulative'].shape
@@ -116,7 +120,7 @@ for volcnet_file in volcnet_files[1:2]:
     #     ifg_resolution_y = 30
     #     ifg_resolution_x = int((nx/ny) * ifg_resolution_y)
 
-    from datetime import datetime
+    
     
     cumulative_r3_small = displacement_r3['cumulative'][::acq_spacing,
                                                         np.array((np.linspace(0, ny-1, ifg_resolution)), dtype = int), :]           # downsample in time and y
@@ -142,13 +146,19 @@ for volcnet_file in volcnet_files[1:2]:
 
 
 
-    fig, axes = plt.subplots(1,2, figsize=(2*figsize, figsize))
+    fig = plt.figure(figsize=(2*figsize, figsize))
+    grid = gridspec.GridSpec(12, 24, wspace=0.1, hspace=0.1)                        # divide into 2 sections, 1/5 for ifgs and 4/5 for components
+    
+    ax_all_ifgs = plt.Subplot(fig, grid[:10, :12])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    ax_1_ifg = plt.Subplot(fig, grid[:10, 12:])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    
+    
     cmap_mid = 1 - ma.max(figure)/(ma.max(figure) + abs(ma.min(figure)))                                     # get the ratio of the data that 0 lies at (eg if data is -15 to 5, ratio is 0.75)
     figure_cmap = remappedColorMap(plt.get_cmap('coolwarm'), start=0.0, midpoint=cmap_mid, stop=1, name='ic_colours_cent')                    # make the colours for plotting the ICs
-    all_ifgs = axes[0].imshow(figure)                                                                   # plot the giant overview of tiny interferograms.  
+    all_ifgs = ax_all_ifgs.imshow(figure)                                                                   # plot the giant overview of tiny interferograms.  
 
     def click(event):
-        if event.inaxes == axes[0]:                                                                    # determine if the mouse is in the axes on the left
+        if event.inaxes == ax_all_ifgs:                                                                    # determine if the mouse is in the axes on the left
             if all_ifgs.contains(event):                                                               # cont is a boolean of if hoving on point, ind is a dictionary about the point being hovered over.  Note that two or more points can be in this.  
                 try:
                     for ax in fig.axes[2:]:
@@ -162,19 +172,37 @@ for volcnet_file in volcnet_files[1:2]:
                 ifg_array = displacement_r3['cumulative'][acq_primary] - displacement_r3['cumulative'][acq_secondary]  
                 cmap_mid = 1 - ma.max(ifg_array)/(ma.max(ifg_array) + abs(ma.min(ifg_array)))                                     # get the ratio of the data that 0 lies at (eg if data is -15 to 5, ratio is 0.75)
                 colours_cent = remappedColorMap(plt.get_cmap('coolwarm'), start=0.0, midpoint=cmap_mid, stop=1, name='ic_colours_cent')                    # make the colours for plotting the ICs
-                ifg = axes[1].imshow(ifg_array, cmap = colours_cent)   # draw that ifg.  
+                ifg = ax_1_ifg.imshow(ifg_array, cmap = colours_cent)   # draw that ifg.  
                 
                 primary = datetime.strptime(tbaseline_info['acq_dates'][acq_primary], '%Y%m%d')
                 secondary = datetime.strptime(tbaseline_info['acq_dates'][acq_secondary], '%Y%m%d')
                 tbaseline = (primary - secondary).days
                 
-                axes[1].set_title(f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)")
+                ax_1_ifg.set_title(f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)")
                 
                 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-                axins2 = inset_axes(axes[1], width="100%", height="100%",                                                             # what fraction of the bounding box to take up
-                                    bbox_to_anchor=(0.25, -0.2, 0.5, 0.07), bbox_transform=axes[1].transAxes)                         # x start y start x width y height    
+                axins2 = inset_axes(ax_1_ifg, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
+                                    bbox_to_anchor=(0.25, -0.2, 0.5, 0.07), bbox_transform=ax_1_ifg.transAxes)                         # x start y start x width y height    
                 cb = fig.colorbar(ifg, cax = axins2, orientation = 'horizontal')
                 cb.set_label("LOS displacement (m)")
+                
+                # update the tick labels to be lon lat
+                xtick_labels = []
+                for tick in ax_1_ifg.get_xticks():
+                    try:                                                                                                    # ticks can extend past data 
+                        xtick_labels.append(np.round(displacement_r3['lons'][-1, int(tick)], 2))        
+                    except:
+                        xtick_labels.append('')
+                ax_1_ifg.xaxis.set_ticklabels(xtick_labels, rotation = 315, ha = 'left')
+                
+                ytick_labels = []
+                for tick in ax_1_ifg.get_yticks():
+                    try:                                                                                                    # ticks can extend past data 
+                        ytick_labels.append(np.round(displacement_r3['lats'][int(tick), 0], 2))        
+                    except:
+                        ytick_labels.append('')
+                ax_1_ifg.yaxis.set_ticklabels(ytick_labels)
+                
                 
                 
             else:                                                                       # else not on a point
@@ -186,42 +214,82 @@ for volcnet_file in volcnet_files[1:2]:
     
 
     fig.canvas.mpl_connect("button_press_event", click)                                # connect the figure and the function, note that done when the mouse clicks.  
-    axes[0].set_xlabel('Primary acquisition')
-    axes[0].set_ylabel('Secondary acquisition')
+    ax_all_ifgs.set_xlabel('Primary acquisition')
+    ax_all_ifgs.set_ylabel('Secondary acquisition')
     # Set the tick labels to be in dates and not pixels of the giant figure.  
     xtick_labels = []
-    for tick in axes[0].get_xticks():
+    for tick in ax_all_ifgs.get_xticks():
         try:                                                                                                    # ticks can extend past data 
             xtick_labels.append(tbaseline_info['acq_dates'][int((tick / ifg_resolution) * acq_spacing)])        
         except:
             xtick_labels.append('')
-    axes[0].set_xticklabels(xtick_labels, rotation = 315, ha = 'left')
+    ax_all_ifgs.xaxis.set_ticklabels(xtick_labels, rotation = 315, ha = 'left')
     ytick_labels = []
-    for tick in axes[0].get_yticks():
+    for tick in ax_all_ifgs.get_yticks():
         try:                                                                                                    # ticks can extend past data 
             ytick_labels.append(tbaseline_info['acq_dates'][int((tick / ifg_resolution) * acq_spacing)])        
         except:
             ytick_labels.append('')
-    axes[0].set_yticklabels(ytick_labels)
+    ax_all_ifgs.yaxis.set_ticklabels(ytick_labels)
+    fig.add_subplot(ax_all_ifgs)                                                                   # add to figure
+    fig.add_subplot(ax_1_ifg)                                                                   # add to figure
     
-# #%%
-# import matplotlib.pyplot as plt
-# import numpy as np
+    
+#%% create labels
 
-# def hover(event):
-#     if event.inaxes == ax:                                                       # determine if the mouse is in the axes
-#         print('here1')
-#         if im.contains(event):                                              # cont is a boolean of if hoving on point, ind is a dictionary about the point being hovered over.  Note that two or more points can be in this.  
-            
-#             print(f"x:{event.xdata} y:{event.ydata}")
-#         else:                                                                       # else not on a point
-#             print('not contains')
-#     else:                                                                           # else not in the axes
-#         print("not in ax")
     
-    
-    
-# fig, ax = plt.subplots()
-# im = ax.imshow(np.random.rand(20,20))
+# make an ifg.  
+# check if transient
 
-# fig.canvas.mpl_connect("motion_notify_event", hover)                                # connect the figure and the function.  
+# check if persistent def exists.  
+# estimate rate from persisent.  
+# compare to threshold
+# assign label.  
+
+def volcnet_labeller(ifg_name, persistent_defs, transient_defs):
+    """
+    """
+    from collections import namedtuple
+    
+    Range = namedtuple('Range', ['start', 'end'])
+    
+    acq_start_dt = datetime.strptime(ifg_name[:8], '%Y%m%d')
+    acq_stop_dt = datetime.strptime(ifg_name[9:], '%Y%m%d')
+    tbaseline = (acq_stop_dt - acq_start_dt).days
+    
+    def_predicted = 0.
+    
+    # 1 Add any persistent deformation
+    for persistent_def in persistent_defs:
+        d_start = datetime.strptime(str(persistent_def['def_episode_start']), '%Y%m%d')
+        d_stop = datetime.strptime(str(persistent_def['def_episode_stop']), '%Y%m%d')
+        
+        r1 = Range(start = acq_start_dt, end = acq_stop_dt)
+        r2 = Range(start = d_start, end = d_stop)
+        latest_start = max(r1.start, r2.start)
+        earliest_end = min(r1.end, r2.end)
+        delta = (earliest_end - latest_start).days
+        overlap = max(0, delta)
+        print(f"Overlapping days: {overlap}")
+        def_predicted += ((overlap / 365.25) * persistent_def['def_rate'])                           # convert days to years
+                        
+    print(f"{def_predicted} m")
+    
+    # 2: Add any transient deformation
+    for transient_def in transient_defs:
+        pass
+    
+    
+    return def_predicted
+
+        
+        
+    
+def_predicted = volcnet_labeller("20180320_20190701", persistent_defs, transient_defs)
+def_predicted = volcnet_labeller("20180320_20180322", persistent_defs, transient_defs)
+
+def_predicted = volcnet_labeller("20141031_20210912", persistent_defs, transient_defs)
+def_predicted = volcnet_labeller("20141031_20230912", persistent_defs, transient_defs)
+def_predicted = volcnet_labeller("20101031_20230912", persistent_defs, transient_defs)
+
+
