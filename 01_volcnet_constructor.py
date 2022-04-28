@@ -352,7 +352,7 @@ def load_fabien_defo_file(defo_file, ifg_dates_file):
 
 
 
-# 1: Agung desceding
+# 1: Agung descedingls -lh
 # deformation isn't very clear
 
 # 2: Agung ascneding
