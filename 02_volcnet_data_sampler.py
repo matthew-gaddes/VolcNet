@@ -155,8 +155,9 @@ for volcnet_file in volcnet_files[10:11]:
     fig = plt.figure(figsize=(2*figsize, figsize))
     grid = gridspec.GridSpec(12, 24, wspace=0.1, hspace=0.1)                        # divide into 2 sections, 1/5 for ifgs and 4/5 for components
     
-    ax_all_ifgs = plt.Subplot(fig, grid[:10, :12])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
-    ax_1_ifg = plt.Subplot(fig, grid[:10, 12:])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    ax_all_ifgs = plt.Subplot(fig, grid[:12, :12])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    ax_1_ifg = plt.Subplot(fig, grid[:8, 12:])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    ax_labels = plt.Subplot(fig, grid[9:, 13:-1])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
     
     
     cmap_mid = 1 - ma.max(figure)/(ma.max(figure) + abs(ma.min(figure)))                                     # get the ratio of the data that 0 lies at (eg if data is -15 to 5, ratio is 0.75)
@@ -187,8 +188,10 @@ for volcnet_file in volcnet_files[10:11]:
                 ax_1_ifg.set_title(f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)")
                 
                 
-                axins2 = inset_axes(ax_1_ifg, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
-                                    bbox_to_anchor=(0.25, -0.2, 0.5, 0.07), bbox_transform=ax_1_ifg.transAxes)                         # x start y start x width y height    
+                # axins2 = inset_axes(ax_1_ifg, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
+                #                     bbox_to_anchor=(0.25, -0.2, 0.5, 0.07), bbox_transform=ax_1_ifg.transAxes)                         # x start y start x width y height    
+                axins2 = inset_axes(ax_1_ifg, width="100%", height="100%", loc = 'upper left',                                                             # what fraction of the bounding box to take up
+                                    bbox_to_anchor=(0.05, 0.95, 0.3, 0.05), bbox_transform=ax_1_ifg.transAxes)                         # x start y start x width y height    
                 cb = fig.colorbar(ifg, cax = axins2, orientation = 'horizontal')
                 cb.set_label("LOS displacement (m)")
                 
@@ -245,7 +248,7 @@ for volcnet_file in volcnet_files[10:11]:
     
     
     #Add the label information at the bottom.  
-    ax_labels = plt.Subplot(fig, grid[-1, :12])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    
     fig.add_subplot(ax_labels)                                                                   # add to figure
     
     # ax_labels = inset_axes(ax_all_ifgs, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
@@ -302,40 +305,50 @@ def volcnet_labeller(ifg_name, persistent_defs, transient_defs):
     acq_start_dt = datetime.strptime(ifg_name[:8], '%Y%m%d')
     acq_stop_dt = datetime.strptime(ifg_name[9:], '%Y%m%d')
     tbaseline = (acq_stop_dt - acq_start_dt).days
-    
+    r1 = Range(start = acq_start_dt, end = acq_stop_dt)
     def_predicted = 0.
     
     # 1 Add any persistent deformation
     for persistent_def in persistent_defs:
         d_start = datetime.strptime(str(persistent_def['def_episode_start']), '%Y%m%d')
         d_stop = datetime.strptime(str(persistent_def['def_episode_stop']), '%Y%m%d')
-        
-        r1 = Range(start = acq_start_dt, end = acq_stop_dt)
+        r2 = Range(start = d_start, end = d_stop)
+        latest_start = max(r1.start, r2.start)
+        earliest_end = min(r1.end, r2.end)
+        delta = (earliest_end - latest_start).days
+        overlap = max(0, delta)
+        # print(f"Overlapping days: {overlap}")
+        def_predicted += ((overlap / 365.25) * persistent_def['def_rate'])                           # convert days to years
+                        
+    #print(f"{def_predicted} m")
+    
+    # 2: Add any transient deformation
+    for transient_def in transient_defs:
+        d_start = datetime.strptime(str(transient_def['def_episode_start']), '%Y%m%d')
+        d_stop = datetime.strptime(str(transient_def['def_episode_stop']), '%Y%m%d')
         r2 = Range(start = d_start, end = d_stop)
         latest_start = max(r1.start, r2.start)
         earliest_end = min(r1.end, r2.end)
         delta = (earliest_end - latest_start).days
         overlap = max(0, delta)
         print(f"Overlapping days: {overlap}")
-        def_predicted += ((overlap / 365.25) * persistent_def['def_rate'])                           # convert days to years
-                        
-    print(f"{def_predicted} m")
+        if overlap > 0:
+            def_predicted += transient_def['def_magnitude']                           # convert days to years
     
-    # 2: Add any transient deformation
-    for transient_def in transient_defs:
-        pass
-    
-    
+    print(def_predicted)
     return def_predicted
 
         
         
     
-def_predicted = volcnet_labeller("20180320_20190701", persistent_defs, transient_defs)
-def_predicted = volcnet_labeller("20180320_20180322", persistent_defs, transient_defs)
+# def_predicted = volcnet_labeller("20180320_20190701", persistent_defs, transient_defs)
+# def_predicted = volcnet_labeller("20180320_20180322", persistent_defs, transient_defs)
 
-def_predicted = volcnet_labeller("20141031_20210912", persistent_defs, transient_defs)
-def_predicted = volcnet_labeller("20141031_20230912", persistent_defs, transient_defs)
-def_predicted = volcnet_labeller("20101031_20230912", persistent_defs, transient_defs)
+# def_predicted = volcnet_labeller("20141031_20210912", persistent_defs, transient_defs)
+# def_predicted = volcnet_labeller("20141031_20230912", persistent_defs, transient_defs)
+# def_predicted = volcnet_labeller("20101031_20230912", persistent_defs, transient_defs)
+
+#def_predicted = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)
+def_predicted = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)
 
 
