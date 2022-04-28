@@ -25,6 +25,9 @@ from small_plot_functions import matrix_show, pngs_to_gif, col_to_ma, quick_line
 import matplotlib.pyplot as plt
 #plt.switch_backend('Qt5Agg')                                                               # only needed if importing this mid debug 
 
+sys.path.append("/home/matthew/university_work/23_insar_tools")                  # 
+import insar_tools
+from insar_tools.plotting import xticks_every_nmonths
 
 def remappedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
@@ -97,9 +100,12 @@ volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')), key = os.path.getm
 
 # for volcnet_file in volcnet_files[1:2]:
 #     print("TESTING - only using Campi Flegrei volcnet file.  ")
-for volcnet_file in volcnet_files[11:12]:
-    print("TESTING - only using Wolf volcnet file.  ")
-    print(volcnet_file)
+# for volcnet_file in volcnet_files[11:12]:
+#     print("TESTING - only using Wolf volcnet file.  ")
+for volcnet_file in volcnet_files[10:11]:
+    print("TESTING - only using Sierra Negra 128 volcnet file.  ")
+
+    #print(volcnet_file)
     
     
     # 1: Open the file
@@ -143,7 +149,7 @@ for volcnet_file in volcnet_files[11:12]:
             figure[row_n*ifg_resolution : (row_n + 1) *ifg_resolution,
                    col_n*ifg_resolution : (col_n + 1) *ifg_resolution,] = mini_ifg
             
-
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
     fig = plt.figure(figsize=(2*figsize, figsize))
@@ -161,7 +167,7 @@ for volcnet_file in volcnet_files[11:12]:
         if event.inaxes == ax_all_ifgs:                                                                    # determine if the mouse is in the axes on the left
             if all_ifgs.contains(event):                                                               # cont is a boolean of if hoving on point, ind is a dictionary about the point being hovered over.  Note that two or more points can be in this.  
                 try:
-                    for ax in fig.axes[2:]:
+                    for ax in fig.axes[4:]:
                         ax.remove()
                 except:
                     pass
@@ -180,7 +186,7 @@ for volcnet_file in volcnet_files[11:12]:
                 
                 ax_1_ifg.set_title(f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)")
                 
-                from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+                
                 axins2 = inset_axes(ax_1_ifg, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
                                     bbox_to_anchor=(0.25, -0.2, 0.5, 0.07), bbox_transform=ax_1_ifg.transAxes)                         # x start y start x width y height    
                 cb = fig.colorbar(ifg, cax = axins2, orientation = 'horizontal')
@@ -224,6 +230,8 @@ for volcnet_file in volcnet_files[11:12]:
         except:
             xtick_labels.append('')
     ax_all_ifgs.xaxis.set_ticklabels(xtick_labels, rotation = 315, ha = 'left')
+    ax_all_ifgs.xaxis.tick_top()
+    ax_all_ifgs.xaxis.set_label_position('top')
     ytick_labels = []
     for tick in ax_all_ifgs.get_yticks():
         try:                                                                                                    # ticks can extend past data 
@@ -231,8 +239,46 @@ for volcnet_file in volcnet_files[11:12]:
         except:
             ytick_labels.append('')
     ax_all_ifgs.yaxis.set_ticklabels(ytick_labels)
+    
     fig.add_subplot(ax_all_ifgs)                                                                   # add to figure
     fig.add_subplot(ax_1_ifg)                                                                   # add to figure
+    
+    
+    #Add the label information at the bottom.  
+    ax_labels = plt.Subplot(fig, grid[-1, :12])                                                # a thin but wide axes for all the thumbnail ifgs along the top to go in
+    fig.add_subplot(ax_labels)                                                                   # add to figure
+    
+    # ax_labels = inset_axes(ax_all_ifgs, width="100%", height="100%",                                                             # what fraction of the bounding box to take up
+    #                        bbox_to_anchor=(0., -0.1, 1., 0.1), bbox_transform=ax_all_ifgs.transAxes)                         # x start y start x width y height    
+    ax_transient = ax_labels.twinx()
+    
+    d0_dt = datetime.strptime(tbaseline_info['acq_dates'][0], '%Y%m%d')
+    ax_labels.set_xlim(tbaseline_info['baselines_cumulative'][0], tbaseline_info['baselines_cumulative'][-1])
+    
+    for persistent_def in persistent_defs:
+        colour = 'tab:orange'
+        x_start = (datetime.strptime(str(persistent_def["def_episode_start"]), '%Y%m%d') - d0_dt).days
+        x_stop = (datetime.strptime(str(persistent_def["def_episode_stop"]), '%Y%m%d') - d0_dt).days
+        ax_transient.plot((x_start, x_stop), (persistent_def["def_rate"], persistent_def["def_rate"]), c = colour)
+        
+    for transient_def in transient_defs:
+        colour = 'tab:blue'
+        x_start = (datetime.strptime(str(transient_def["def_episode_start"]), '%Y%m%d') - d0_dt).days
+        x_stop = (datetime.strptime(str(transient_def["def_episode_stop"]), '%Y%m%d') - d0_dt).days
+        ax_transient.plot((x_start, x_stop), (transient_def["def_magnitude"], transient_def["def_magnitude"]), c = colour)
+
+
+
+    xticks_every_nmonths(ax_labels, tbaseline_info['acq_dates'][0], tbaseline_info['baselines_cumulative'], include_tick_labels = True,                  # update x ticks, but with labels.  
+                         major_ticks_n_months = 12, minor_ticks_n_months = 3)
+
+    ax_transient.set_ylabel('Transient\ndeformation (m)', color=colour, fontsize= 10)  # we already handled the x-label with ax1
+    ax_transient.tick_params(axis='y', labelcolor=colour)
+    ax_labels.set_ylabel('Persistent\ndeformation (m/yr)', fontsize = 10)
+        # pdb.set_trace()
+        
+    
+    #fig.add_subplot(ax_labels)                                                                   # add to figure
     
     
 #%% create labels
