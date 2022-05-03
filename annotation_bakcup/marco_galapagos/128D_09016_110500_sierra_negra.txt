@@ -1,0 +1,59 @@
+[persistent_deformation_00]
+def_lon_west = -91.17
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = -0.80
+def_rate = 0.4
+def_episode_start = 20141213
+def_episode_stop = 20170706
+source = sill
+
+[persistent_deformation_01]
+def_lon_west = -91.17
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = -0.80
+def_rate = 1.47
+def_episode_start = 20170706
+def_episode_stop = 20180526
+source = sill
+
+[transient_deformation_00]
+def_lon_west = -91.28
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = 0.70
+def_magnitude = 0.7
+def_episode_start = 20180526
+def_episode_stop = 20180607
+source = sill
+
+[transient_deformation_01]
+def_lon_west = -91.17
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = -0.80
+def_magnitude = 0.07
+def_episode_start = 20180607
+def_episode_stop = 20180619
+source = sill
+
+[transient_deformation_02]
+def_lon_west = -91.28
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = 0.70
+def_magnitude = 0.8
+def_episode_start = 20180619
+def_episode_stop = 20180701
+source = sill
+
+[transient_deformation_03]
+def_lon_west = -91.28
+def_lon_east = -91.11
+def_lat_south = -0.84
+def_lat_north = 0.70
+def_magnitude = 0.8
+def_episode_start = 20180701
+def_episode_stop = 20180713
+source = sill

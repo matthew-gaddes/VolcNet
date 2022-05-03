@@ -1,29 +1,21 @@
 [transient_deformation_00]
-def_lon_west = -91.35
-def_lon_east = -91.31
-def_lat_south = -0.01
-def_lat_north = 0.04
-def_magnitude = 0.5
 def_episode_start = 20150518
 def_episode_stop = 20150530
 source = sill
+def_magnitude = 0.5
+def_polygon = [(-91.35, 0.04), (-91.31, 0.04), (-91.31, -0.01), (-91.35, -0.01), (-91.35, 0.04)]
 
 [transient_deformation_01]
-def_lon_west = -91.33
-def_lon_east = -91.31
-def_lat_south = -0.01
-def_lat_north = 0.01
-def_magnitude = 0.25
 def_episode_start = 20150530
 def_episode_stop = 20150611
 source = dyke
+def_magnitude = 0.25
+def_polygon = [(-91.33, 0.01), (-91.31, 0.01), (-91.31, -0.01), (-91.33, -0.01), (-91.33, 0.01)]
 
 [transient_deformation_02]
-def_lon_west = -91.35
-def_lon_east = -91.31
-def_lat_south = -0.01
-def_lat_north = 0.04
-def_magnitude = -0.25
 def_episode_start = 20150611
 def_episode_stop = 20150623
 source = sill
+def_magnitude = -0.25
+def_polygon = [(-91.35, 0.04), (-91.31, 0.04), (-91.31, -0.01), (-91.35, -0.01), (-91.35, 0.04)]
+

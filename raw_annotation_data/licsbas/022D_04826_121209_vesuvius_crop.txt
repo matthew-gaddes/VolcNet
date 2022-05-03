@@ -1,9 +1,7 @@
 [persistent_deformation_00]
-def_lon_west = 14.42
-def_lon_east = 14.45
-def_lat_south = 40.81
-def_lat_north = 40.83
-def_rate = -0.01
 def_episode_start = 20141031
 def_episode_stop = 20210912
 source = sill
+def_rate = -0.01
+def_polygon = [(14.42, 40.83), (14.45, 40.83), (14.45, 40.81), (14.42, 40.81), (14.42, 40.83)]
+

@@ -1,19 +1,14 @@
 [persistent_deformation_00]
-def_lon_west = -91.17
-def_lon_east = -91.11
-def_lat_south = -0.84
-def_lat_north = -0.80
-def_rate = 0.5
 def_episode_start = 20161213
 def_episode_stop = 20170623
 source = sill
+def_rate = 0.5
+def_polygon = [(-91.17, -0.80), (-91.11, -0.80), (-91.11, -0.84), (-91.17, -0.84), (-91.17, -0.80)]
 
 [persistent_deformation_01]
-def_lon_west = -91.17
-def_lon_east = -91.11
-def_lat_south = -0.84
-def_lat_north = -0.80
-def_rate = 1.2
 def_episode_start = 20170623
 def_episode_stop = 20180302
 source = sill
+def_rate = 1.2
+def_polygon = [(-91.17, -0.80), (-91.11, -0.80), (-91.11, -0.84), (-91.17, -0.84), (-91.17, -0.80)]
+
