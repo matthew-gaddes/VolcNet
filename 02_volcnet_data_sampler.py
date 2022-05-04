@@ -6,6 +6,8 @@ Created on Fri Apr 22 15:10:50 2022
 @author: matthew
 """
 
+
+
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -83,14 +85,41 @@ for volcnet_file in volcnet_files[11:12]:
 
 def volcnet_labeller(ifg_name, persistent_defs, transient_defs, noise_threshold = 0.02):
     """ Given VolcNet lables (persistent and transient defs) for a time series, and the acquisiiton dates for an inteferogram,
-    Create a label for it.  
+    Create a label for it, calculate the amount of deformaiton expected, and the bounding box.  
     
     Inputs:
+        ifg_name | string | in form yyyymmdd_yyyymmdd
+        persistent_defs | list of dicts | Info on each type of persistent deformation in the time series.  
+        transient_defs | list of dicts | Info on each type of transient deformation in the time series.  
         
     Returns:
+        def_predicted | float | Amount of deforamtion predicted to be in that interferogram (m)
+        sources | list of string | source label for that deformation.  If multiple sources (e.g. a long ifg has both a sill and dyke), list has multiple entries.  
+        def_location | list of tuple (lon, lat) | Closed polygon around deformation.  
+        
+    History:
+        2022_05_04 | MEG | Written.  
     
     """
+    
     from collections import namedtuple
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+        
+    def polygon_to_list_tuples(polygon):
+        """Given a shapely polygon, turn it back into a simple list of tuples.  
+        """
+        polygon_list = []
+        
+        x, y = polygon.exterior.coords.xy                                 # get the coords of that
+        x = np.array(x)                                                                     # make into a numpy array, rank 1
+        y = np.array(y)                                                                     # make into a numpy array, rank 1
+        
+        for lon, lat in zip(x, y):
+            polygon_list.append((lon, lat))
+        return polygon_list
+    
+
     
     Range = namedtuple('Range', ['start', 'end'])
     
@@ -101,6 +130,7 @@ def volcnet_labeller(ifg_name, persistent_defs, transient_defs, noise_threshold 
     
     def_predicted = 0.                                                                                      # initiate
     sources = []                                                                                            # initiate.  
+    location_polygon = Polygon([])
     
     # 1 Add any persistent deformation
     for persistent_def in persistent_defs:
@@ -116,6 +146,8 @@ def volcnet_labeller(ifg_name, persistent_defs, transient_defs, noise_threshold 
             def_predicted += ((overlap / 365.25) * persistent_def['def_rate'])                                      # convert days to years, then multiply by rate in m/year
             if persistent_def['source'] not in sources:
                 sources.append(persistent_def['source'])
+            location_polygon_current = Polygon(persistent_def['def_polygon'])
+            location_polygon = unary_union([location_polygon, location_polygon_current])
                         
     #print(f"{def_predicted} m")
     
@@ -133,11 +165,17 @@ def volcnet_labeller(ifg_name, persistent_defs, transient_defs, noise_threshold 
             def_predicted += transient_def['def_magnitude']                           # convert days to years
             if transient_def['source'] not in sources:
                 sources.append(transient_def['source'])
+            location_polygon_current = Polygon(transient_def['def_polygon'])
+            location_polygon = unary_union([location_polygon, location_polygon_current])
+            
+    def_location = polygon_to_list_tuples(location_polygon)
     
     
-    return def_predicted, sources
+    return def_predicted, sources, def_location
 
-        
+    
+#%%
+
         
     
 # def_predicted = volcnet_labeller("20180320_20190701", persistent_defs, transient_defs)
@@ -148,5 +186,5 @@ def volcnet_labeller(ifg_name, persistent_defs, transient_defs, noise_threshold 
 # def_predicted = volcnet_labeller("20101031_20230912", persistent_defs, transient_defs)
 
 #def_predicted = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)
-def_predicted, sources = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
+def_predicted, sources, def_location = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
     
