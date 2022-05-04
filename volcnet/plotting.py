@@ -6,6 +6,7 @@ Created on Tue May  3 12:33:40 2022
 @author: matthew
 """
 
+import pdb
 
 def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, 
                           acq_spacing = 5, ifg_resolution = 20, figsize_height = 10):
@@ -60,6 +61,7 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     import matplotlib.gridspec as gridspec
+    import matplotlib.ticker as mticker
     
     def click(event):
         if event.inaxes == ax_all_ifgs:                                                                    # determine if the mouse is in the axes on the left
@@ -98,7 +100,9 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                         xtick_labels.append(np.round(displacement_r3['lons'][-1, int(tick)], 2))        
                     except:
                         xtick_labels.append('')
-                ax_1_ifg.xaxis.set_ticklabels(xtick_labels, rotation = 315, ha = 'left')
+                ax_1_ifg.xaxis.set_major_locator(mticker.FixedLocator(ax_1_ifg.get_xticks()))
+                ax_1_ifg.xaxis.set_major_formatter(mticker.FixedFormatter(xtick_labels))
+                plt.setp(ax_1_ifg.get_xticklabels(), rotation=35, horizontalalignment='left')
                 
                 ytick_labels = []
                 for tick in ax_1_ifg.get_yticks():
@@ -106,7 +110,8 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                         ytick_labels.append(np.round(displacement_r3['lats'][int(tick), 0], 2))        
                     except:
                         ytick_labels.append('')
-                ax_1_ifg.yaxis.set_ticklabels(ytick_labels)
+                ax_1_ifg.yaxis.set_major_locator(mticker.FixedLocator(ax_1_ifg.get_yticks()))
+                ax_1_ifg.yaxis.set_major_formatter(mticker.FixedFormatter(ytick_labels))
 
             else:                                                                                                           # else not on a point
                 pass
@@ -158,17 +163,22 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
             xtick_labels.append(tbaseline_info['acq_dates'][int((tick / ifg_resolution) * acq_spacing)])        
         except:
             xtick_labels.append('')
-    ax_all_ifgs.xaxis.set_ticklabels(xtick_labels, rotation = 315, ha = 'left')
+
+    ax_all_ifgs.xaxis.set_major_locator(mticker.FixedLocator(ax_all_ifgs.get_xticks()))
+    ax_all_ifgs.xaxis.set_major_formatter(mticker.FixedFormatter(xtick_labels))
     ax_all_ifgs.xaxis.tick_top()
     ax_all_ifgs.xaxis.set_label_position('top')
+    plt.setp(ax_all_ifgs.get_xticklabels(), rotation=35, horizontalalignment='left')
+    
     ytick_labels = []
     for tick in ax_all_ifgs.get_yticks():
         try:                                                                                                    # ticks can extend past data 
             ytick_labels.append(tbaseline_info['acq_dates'][int((tick / ifg_resolution) * acq_spacing)])        
         except:
             ytick_labels.append('')
-    ax_all_ifgs.yaxis.set_ticklabels(ytick_labels)
-    
+    ax_all_ifgs.yaxis.set_major_locator(mticker.FixedLocator(ax_all_ifgs.get_yticks()))
+    ax_all_ifgs.yaxis.set_major_formatter(mticker.FixedFormatter(ytick_labels))
+
     fig.add_subplot(ax_all_ifgs)                                                                   # add to figure
     fig.add_subplot(ax_1_ifg)                                                                   # add to figure
     

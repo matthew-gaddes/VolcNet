@@ -55,7 +55,7 @@ volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')))            # get t
 #     print("TESTING - only using Campi Flegrei volcnet file.  ")
 # for volcnet_file in volcnet_files[11:12]:
 #     print("TESTING - only using Wolf volcnet file.  ")
-for volcnet_file in volcnet_files[10:11]:
+for volcnet_file in volcnet_files[11:12]:
     print("TESTING - only using Sierra Negra 128 volcnet file.  ")
     
     # 1: Open the file
