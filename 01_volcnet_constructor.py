@@ -82,10 +82,7 @@ def read_volcnet_label(label_file):
         list_of_strings = config.get(deformation_event, 'def_polygon').strip('][').split('),')                                      # bit of a horrible string that looks like a list of tuples, convert to list of messy strings
         event['def_polygon'] = []                                                                                                   # initiate
         for list_of_string in list_of_strings:                                                                                      # loop through
-            event['def_polygon'].append((list_of_string.strip('(').split(', ')[0], list_of_string.strip('(').split(', ')[1]))       # convert string that looks like tuple to a tuple.  
-       
-        
-        event['def_polygon'] = config.get(deformation_event, 'def_polygon').strip('][').split(',')       # 
+            event['def_polygon'].append((float(list_of_string.strip(' ()').split(', ')[0]), float(list_of_string.strip(' ()').split(', ')[1])))       # convert string that looks like tuple to a tuple.  
         event['def_episode_start'] = int(config.get(deformation_event, 'def_episode_start'))       # 
         event['def_episode_stop'] = int(config.get(deformation_event, 'def_episode_stop'))       # 
         event['source'] = config.get(deformation_event, 'source')       # 
@@ -158,7 +155,7 @@ for licsbas_ts in licsbas_tss:
     #r2_arrays_to_googleEarth(displacement_r3['cumulative'][-1,][np.newaxis,], displacement_r3['lons'], displacement_r3['lats'], 'IC', out_folder = './', kmz_filename = 'last_cumulative_ifg')                              # note that lons and lats should be rank 2 (ie an entry for each pixel in the ifgs)
     
     # open the aux data
-    persistent_def, transient_def = read_volcnet_label(licsbas_labels_dir / (licsbas_ts + '.txt'))
+    persistent_defs, transient_defs = read_volcnet_label(licsbas_labels_dir / (licsbas_ts + '.txt'))
     
     # remove some attributes as we don't have them for the Marco Galapagos data and want to be consistent.  
     del displacement_r3['E'], displacement_r3['N'], displacement_r3['U']
@@ -185,8 +182,8 @@ for licsbas_ts in licsbas_tss:
     with open(f"{licsbas_ts}.pkl", 'wb') as f:                                                                     # Or open the products from a previous ICASAR run.  
         pickle.dump(displacement_r3, f)
         pickle.dump(tbaseline_info, f)
-        pickle.dump(persistent_def, f)
-        pickle.dump(transient_def, f)
+        pickle.dump(persistent_defs, f)
+        pickle.dump(transient_defs, f)
     f.close()                                                                                                                           
     
     
@@ -290,15 +287,15 @@ for galapagos_file in galapagos_files:
   
 
     # open the aux data
-    persistent_def, transient_def = read_volcnet_label(marco_galapagos_labels_dir / (ts_name + '.txt'))
+    persistent_defs, transient_defs = read_volcnet_label(marco_galapagos_labels_dir / (ts_name + '.txt'))
 
     
     # 2: write to a file
     with open(f"{ts_name}.pkl", 'wb') as f:                                                                     # Or open the products from a previous ICASAR run.  
         pickle.dump(displacement_r3, f)
         pickle.dump(tbaseline_info, f)
-        pickle.dump(persistent_def, f)
-        pickle.dump(transient_def, f)
+        pickle.dump(persistent_defs, f)
+        pickle.dump(transient_defs, f)
     f.close()                                                                                                                           
 
     
@@ -412,13 +409,13 @@ if False:
   
 
 # open the aux data
-persistent_def, transient_def = read_volcnet_label(fabien_agung_labels_dir / "156A_09814_081406_agung.txt")    
+persistent_defs, transient_defs = read_volcnet_label(fabien_agung_labels_dir / "156A_09814_081406_agung.txt")    
 
 
 # 2: write to a file
 with open(f"156A_09814_081406_agung.pkl", 'wb') as f:                                                                     # Or open the products from a previous ICASAR run.  
     pickle.dump(displacement_r3, f)
     pickle.dump(tbaseline_info, f)
-    pickle.dump(persistent_def, f)
-    pickle.dump(transient_def, f)
+    pickle.dump(persistent_defs, f)
+    pickle.dump(transient_defs, f)
 f.close()                                                                                                                               

@@ -49,7 +49,7 @@ figsize = 10
 
 
 
-volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')), key = os.path.getmtime)            # get the paths to the mat files from fabien
+volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')))            # get the paths to the mat files from fabien
 
 # for volcnet_file in volcnet_files[1:2]:
 #     print("TESTING - only using Campi Flegrei volcnet file.  ")
