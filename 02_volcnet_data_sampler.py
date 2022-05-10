@@ -67,7 +67,7 @@ for volcnet_file in volcnet_files[11:12]:
         transient_defs = pickle.load(f)
 
     #print(volcnet_file)
-    volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, acq_spacing = 5, ifg_resolution = 20, figsize_height = 10,
+    volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, acq_spacing = 1, ifg_resolution = 20, figsize_height = 10,
                           labelling_function = volcnet_labeller)
     
     
@@ -99,4 +99,5 @@ for volcnet_file in volcnet_files[11:12]:
 #def_predicted = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)
 #def_predicted, sources, def_location = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
 def_predicted, sources, def_location = volcnet_labeller("20180713_20180526", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
-    
+
+

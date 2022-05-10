@@ -63,15 +63,20 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
     import matplotlib.gridspec as gridspec
     import matplotlib.ticker as mticker
     
+    from volcnet.aux import ll_2_pixel
+    
     def click(event):
         if event.inaxes == ax_all_ifgs:                                                                    # determine if the mouse is in the axes on the left
             if all_ifgs.contains(event):                                                                   # cont is a boolean of if hoving on point, ind is a dictionary about the point being hovered over.  Note that two or more points can be in this.  
+                
+                # 0: clear axes from the previous time we drew a single ifg.  
                 try:
                     for ax in fig.axes[4:]:                                         
                         ax.remove()                                                                        # possibly remove the colobar axis so it can be drawn again     
                 except:
                     pass
-
+                ax_1_ifg.clear()                                                                            # and clear the axes to get rid of imshow and plot (for the location information)
+                
                 # 1: Make the ifg that the mouse is hovering on                    
                 acq_primary = int(event.xdata / ifg_resolution) * acq_spacing                                                               # xdata is in pixels of the big image, figure, convert to which acquisition number this is.   
                 acq_secondary = int(event.ydata / ifg_resolution) * acq_spacing                                                             # and in y 
@@ -115,12 +120,12 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                 ax_1_ifg.yaxis.set_major_formatter(mticker.FixedFormatter(ytick_labels))
                 
                 if labelling_function is not None:
-                    #pdb.set_trace()
-                    ifg_name = f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]}"
-                    def_predicted, sources, def_location = labelling_function(ifg_name, persistent_defs, transient_defs)                      # 
-                    #pdb.set_trace()
-                    ifg_title = ifg_title + f"\n Source(s): {sources} Magnitude: {def_predicted:.2f}m"                                          # deformation is to 2dp.  
-                    ax_1_ifg.set_title(ifg_title)
+                    ifg_name = f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]}"            # get the name of the ifg in yyyymmdd_yyyymmdd
+                    def_predicted, sources, def_location = labelling_function(ifg_name, persistent_defs, transient_defs)             # determine label.
+                    ifg_title = ifg_title + f"\n Source(s): {sources} Magnitude: {def_predicted:.2f}m"                               # add label info to title, deformation is to 2dp.  
+                    ax_1_ifg.set_title(ifg_title)                                                                                    # make label
+                    xys_array = ll_2_pixel(def_location, displacement_r3['lons'], displacement_r3['lats'])                           # convert lon and lat of deformation to pixel number
+                    ax_1_ifg.plot(xys_array[:,0], xys_array[:,1] )                                                                   # plot pixel numbers       
                     
 
             else:                                                                                                           # else not on a point

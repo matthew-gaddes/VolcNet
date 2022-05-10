@@ -17,7 +17,7 @@ def_episode_start = 20180526
 def_episode_stop = 20180607
 source = sill
 def_magnitude = 0.7
-def_polygon = [(-91.28, 0.70), (-91.11, 0.70), (-91.11, -0.84), (-91.28, -0.84), (-91.28, 0.70)]
+def_polygon = [(-91.28, -0.70), (-91.11, -0.70), (-91.11, -0.84), (-91.28, -0.84), (-91.28, -`0.70)]
 
 [transient_deformation_01]
 def_episode_start = 20180607
@@ -39,4 +39,3 @@ def_episode_stop = 20180713
 source = sill
 def_magnitude = 0.8
 def_polygon = [(-91.28, 0.70), (-91.11, 0.70), (-91.11, -0.84), (-91.28, -0.84), (-91.28, 0.70)]
-
