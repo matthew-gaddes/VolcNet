@@ -9,7 +9,7 @@ Created on Tue May  3 12:33:40 2022
 import pdb
 
 def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, 
-                          acq_spacing = 5, ifg_resolution = 20, figsize_height = 10):
+                          acq_spacing = 5, ifg_resolution = 20, figsize_height = 10, labelling_function = None):
     """Visualise all the possible interferograms that can be formed from a VolcNet time series.  
     
     Inputs:
@@ -90,7 +90,8 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                 primary = datetime.strptime(tbaseline_info['acq_dates'][acq_primary], '%Y%m%d')                                                     # to label with the temporal baseline, need to get acquisitions.  
                 secondary = datetime.strptime(tbaseline_info['acq_dates'][acq_secondary], '%Y%m%d')
                 tbaseline = (primary - secondary).days
-                ax_1_ifg.set_title(f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)")
+                ifg_title = f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]} ({tbaseline} days)"
+                ax_1_ifg.set_title(ifg_title)
 
                 
                 # 3: update the tick labels to be lon lat
@@ -112,6 +113,15 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                         ytick_labels.append('')
                 ax_1_ifg.yaxis.set_major_locator(mticker.FixedLocator(ax_1_ifg.get_yticks()))
                 ax_1_ifg.yaxis.set_major_formatter(mticker.FixedFormatter(ytick_labels))
+                
+                if labelling_function is not None:
+                    #pdb.set_trace()
+                    ifg_name = f"{tbaseline_info['acq_dates'][acq_secondary]}_{tbaseline_info['acq_dates'][acq_primary]}"
+                    def_predicted, sources, def_location = labelling_function(ifg_name, persistent_defs, transient_defs)                      # 
+                    #pdb.set_trace()
+                    ifg_title = ifg_title + f"\n Source(s): {sources} Magnitude: {def_predicted:.2f}m"                                          # deformation is to 2dp.  
+                    ax_1_ifg.set_title(ifg_title)
+                    
 
             else:                                                                                                           # else not on a point
                 pass
