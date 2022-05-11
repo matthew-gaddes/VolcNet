@@ -7,7 +7,6 @@ Created on Fri Apr 22 15:10:50 2022
 """
 
 
-
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -71,7 +70,7 @@ for volcnet_file in volcnet_files[11:12]:
                           labelling_function = volcnet_labeller)
     
     
-        
+
 #%% create labels
 
     
