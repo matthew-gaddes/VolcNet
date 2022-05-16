@@ -6,6 +6,8 @@ Created on Tue May 10 16:32:36 2022
 @author: matthew
 """
 
+import pdb
+
 #%%
 
 def ll_2_pixel(lls, lons, lats):
@@ -35,8 +37,9 @@ def ll_2_pixel(lls, lons, lats):
     pixel_size['y'] = np.abs(lats[0,0] - lats[1,0])
     
     for point_n, ll in enumerate(lls):
-        xys[point_n, 0] = (ll[0] - ll_upper_left[0])   / pixel_size['x']
-        xys[point_n, 1] = ((-1) * (ll[1] - ll_upper_left[1]))   / pixel_size['y']         # y needs flipping as down is positive in matrix notation
+        pdb.set_trace()
+        xys[point_n, 0] = int(ll[0] - ll_upper_left[0])   / pixel_size['x']
+        xys[point_n, 1] = int((-1) * (ll[1] - ll_upper_left[1]))   / pixel_size['y']         # y needs flipping as down is positive in matrix notation
         
     return xys
 
