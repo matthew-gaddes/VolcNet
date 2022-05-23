@@ -208,10 +208,9 @@ for ll_file_index in sorted(ll_file_indexes)[::-1]:
 if len(galapagos_files) == 0:
     raise Exception("No galapagos files were found.  Unable to proceed.")
   
-
+#pdb.set_trace()
   
-for galapagos_file in galapagos_files[1:2]:
-    print(f"ONLY WORKING WITH ONE FILE")
+for galapagos_file in galapagos_files[4:5]:
     
     ts_name = galapagos_file.split('/')[-1].split('.')[0]
     
@@ -303,7 +302,7 @@ for galapagos_file in galapagos_files[1:2]:
     f.close()                                                                                                                           
 
     
-pdb.set_trace()
+
 
 
 #%% Fabien Albino Agung data.  
