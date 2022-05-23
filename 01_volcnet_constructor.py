@@ -117,74 +117,74 @@ fabien_agung_labels_dir = Path("/home/matthew/university_work/13_volcnet/raw_ann
 
 #%% Define Licsbas volcanoes that are included:
     
-licsbas_tss = [#'002A_05136_020502_azores',
-              '002A_05136_020502_azores_crop',                          # no deformation visible, poor coherence
-              #'018A_12668_131313_domuyo',                           # doesn't have any data in
-              '022D_04826_121209',                                      # campi flegrei
-              #'022D_04826_121209_vesuvius',
-              '022D_04826_121209_vesuvius_crop',
-              #'060A_00001_030604_rationalized',
-              '079D_07694_131313_erta_ale',                         # erption in, info taken from Chris Moore paper.  
-              #'082D_05128_030500_azores',
-              '082D_05128_030500_azores_crop',                      # no deformation visible, poor coherence.  
-              #'083D_12636_131313_domuyo',                                   # appears to be empty
-              '083D_12636_131313_domuyo_rationalized_v2',
-              '124D_04854_171313_licsbas_example_extended',                     # campi flegrei
-              #'128D_09016_110500_sierra_negra',                                     # no data in cum.h5
-              #'128D_09016_110500_sierra_negra_bright',
-              '169D_00001_020800_rationalized']                                 # la palma
+# licsbas_tss = [#'002A_05136_020502_azores',
+#               '002A_05136_020502_azores_crop',                          # no deformation visible, poor coherence
+#               #'018A_12668_131313_domuyo',                           # doesn't have any data in
+#               '022D_04826_121209',                                      # campi flegrei
+#               #'022D_04826_121209_vesuvius',
+#               '022D_04826_121209_vesuvius_crop',
+#               #'060A_00001_030604_rationalized',
+#               '079D_07694_131313_erta_ale',                         # erption in, info taken from Chris Moore paper.  
+#               #'082D_05128_030500_azores',
+#               '082D_05128_030500_azores_crop',                      # no deformation visible, poor coherence.  
+#               #'083D_12636_131313_domuyo',                                   # appears to be empty
+#               '083D_12636_131313_domuyo_rationalized_v2',
+#               '124D_04854_171313_licsbas_example_extended',                     # campi flegrei
+#               #'128D_09016_110500_sierra_negra',                                     # no data in cum.h5
+#               #'128D_09016_110500_sierra_negra_bright',
+#               '169D_00001_020800_rationalized']                                 # la palma
 
 
-#%% Time series that were processed by LiCSBAS.  
+# #%% Time series that were processed by LiCSBAS.  
 
-for licsbas_ts in licsbas_tss:
+# for licsbas_ts in licsbas_tss:
     
-    # open the LiCSBAS data.  
-    print(f"Opening the LiCSBAS results for {licsbas_ts}...")
-    displacement_r2, tbaseline_info, ref_xy = LiCSBAS_to_ICASAR(licsbas_ts_dir / licsbas_ts,
-                                                                figures=True, ref_area = True, mask_type = mask_type)    # open the h5 file produced by LiCSBAS, lons and lats are in geocode info and same resolution as the ifgs
+#     # open the LiCSBAS data.  
+#     print(f"Opening the LiCSBAS results for {licsbas_ts}...")
+#     displacement_r2, tbaseline_info, ref_xy = LiCSBAS_to_ICASAR(licsbas_ts_dir / licsbas_ts,
+#                                                                 figures=True, ref_area = True, mask_type = mask_type)    # open the h5 file produced by LiCSBAS, lons and lats are in geocode info and same resolution as the ifgs
     
-    del tbaseline_info['ifg_dates'], tbaseline_info['baselines'], displacement_r2['incremental']                        # remove some data formats that are not needed (as simples to be consistent and keep only the cumulative information)
+#     del tbaseline_info['ifg_dates'], tbaseline_info['baselines'], displacement_r2['incremental']                        # remove some data formats that are not needed (as simples to be consistent and keep only the cumulative information)
     
-    # convert it to rank 3 (ie time lat lon)
-    displacement_r3 = deepcopy(displacement_r2)                                                                         # make a dict for the rank 3 data
-    del displacement_r3['cumulative']                                                                                   # remove this as it's the only one that's still rank 2 (ie row vectors)    
-    displacement_r3['cumulative'] = r2_to_r3(displacement_r2['cumulative'], displacement_r2['mask'])                     # and remake as rank 3 (ie times x ny x nx)
+#     # convert it to rank 3 (ie time lat lon)
+#     displacement_r3 = deepcopy(displacement_r2)                                                                         # make a dict for the rank 3 data
+#     del displacement_r3['cumulative']                                                                                   # remove this as it's the only one that's still rank 2 (ie row vectors)    
+#     displacement_r3['cumulative'] = r2_to_r3(displacement_r2['cumulative'], displacement_r2['mask'])                     # and remake as rank 3 (ie times x ny x nx)
     
-    # possibly output to google earth to check
-    #r2_arrays_to_googleEarth(displacement_r3['cumulative'][-1,][np.newaxis,], displacement_r3['lons'], displacement_r3['lats'], 'IC', out_folder = './', kmz_filename = 'last_cumulative_ifg')                              # note that lons and lats should be rank 2 (ie an entry for each pixel in the ifgs)
+#     # possibly output to google earth to check
+#     #r2_arrays_to_googleEarth(displacement_r3['cumulative'][-1,][np.newaxis,], displacement_r3['lons'], displacement_r3['lats'], 'IC', out_folder = './', kmz_filename = 'last_cumulative_ifg')                              # note that lons and lats should be rank 2 (ie an entry for each pixel in the ifgs)
     
-    # open the aux data
-    persistent_defs, transient_defs = read_volcnet_label(licsbas_labels_dir / (licsbas_ts + '.txt'))
+#     # open the aux data
+#     persistent_defs, transient_defs = read_volcnet_label(licsbas_labels_dir / (licsbas_ts + '.txt'))
     
-    # remove some attributes as we don't have them for the Marco Galapagos data and want to be consistent.  
-    del displacement_r3['E'], displacement_r3['N'], displacement_r3['U']
+#     # remove some attributes as we don't have them for the Marco Galapagos data and want to be consistent.  
+#     del displacement_r3['E'], displacement_r3['N'], displacement_r3['U']
     
-    # possibly rename from MEG licsbas time series names to Volcnet names (frame + volcname)
-    if licsbas_ts == "002A_05136_020502_azores_crop":
-        licsbas_ts = "002A_05136_020502_azores_crop_sao_jorge"
-    elif licsbas_ts == '022D_04826_121209':
-        licsbas_ts = "022D_04826_121209_campi_flegrei"
-    elif licsbas_ts == '022D_04826_121209_vesuvius_crop':
-        licsbas_ts = "022D_04826_121209_vesuvius"
-    elif licsbas_ts == '082D_05128_030500_azores_crop':
-        licsbas_ts = "082D_05128_030500_azores_sao_jorge"
-    elif licsbas_ts == '083D_12636_131313_domuyo_rationalized_v2':
-        licsbas_ts = '083D_12636_131313_domuyo'
-    elif licsbas_ts == '124D_04854_171313_licsbas_example_extended':
-        licsbas_ts = '124D_04854_171313_campi_flegrei'
-    elif licsbas_ts == '169D_00001_020800_rationalized':
-        licsbas_ts = "169D_00001_020800_la_plama"
+#     # possibly rename from MEG licsbas time series names to Volcnet names (frame + volcname)
+#     if licsbas_ts == "002A_05136_020502_azores_crop":
+#         licsbas_ts = "002A_05136_020502_azores_crop_sao_jorge"
+#     elif licsbas_ts == '022D_04826_121209':
+#         licsbas_ts = "022D_04826_121209_campi_flegrei"
+#     elif licsbas_ts == '022D_04826_121209_vesuvius_crop':
+#         licsbas_ts = "022D_04826_121209_vesuvius"
+#     elif licsbas_ts == '082D_05128_030500_azores_crop':
+#         licsbas_ts = "082D_05128_030500_azores_sao_jorge"
+#     elif licsbas_ts == '083D_12636_131313_domuyo_rationalized_v2':
+#         licsbas_ts = '083D_12636_131313_domuyo'
+#     elif licsbas_ts == '124D_04854_171313_licsbas_example_extended':
+#         licsbas_ts = '124D_04854_171313_campi_flegrei'
+#     elif licsbas_ts == '169D_00001_020800_rationalized':
+#         licsbas_ts = "169D_00001_020800_la_plama"
         
     
     
-    # write to a file
-    with open(f"{licsbas_ts}.pkl", 'wb') as f:                                                                     # Or open the products from a previous ICASAR run.  
-        pickle.dump(displacement_r3, f)
-        pickle.dump(tbaseline_info, f)
-        pickle.dump(persistent_defs, f)
-        pickle.dump(transient_defs, f)
-    f.close()                                                                                                                           
+#     # write to a file
+#     with open(f"{licsbas_ts}.pkl", 'wb') as f:                                                                     # Or open the products from a previous ICASAR run.  
+#         pickle.dump(displacement_r3, f)
+#         pickle.dump(tbaseline_info, f)
+#         pickle.dump(persistent_defs, f)
+#         pickle.dump(transient_defs, f)
+#     f.close()                                                                                                                           
     
     
 #%% Marco Bagnardi Galapgos time series.  
@@ -207,8 +207,11 @@ for ll_file_index in sorted(ll_file_indexes)[::-1]:
     del galapagos_files[ll_file_index]
 if len(galapagos_files) == 0:
     raise Exception("No galapagos files were found.  Unable to proceed.")
-    
-for galapagos_file in galapagos_files:
+  
+
+  
+for galapagos_file in galapagos_files[1:2]:
+    print(f"ONLY WORKING WITH ONE FILE")
     
     ts_name = galapagos_file.split('/')[-1].split('.')[0]
     
@@ -300,7 +303,7 @@ for galapagos_file in galapagos_files:
     f.close()                                                                                                                           
 
     
-
+pdb.set_trace()
 
 
 #%% Fabien Albino Agung data.  

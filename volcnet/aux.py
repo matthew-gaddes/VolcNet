@@ -28,7 +28,7 @@ def ll_2_pixel(lls, lons, lats):
     
     import numpy as np
     
-    xys = np.zeros((len(lls), 2))
+    xys = np.zeros((len(lls), 2), dtype = 'int')
     
     ll_upper_left = np.array([lons[0,0], lats[0,0]])                                  # x then y, lon then lat
     
@@ -37,9 +37,8 @@ def ll_2_pixel(lls, lons, lats):
     pixel_size['y'] = np.abs(lats[0,0] - lats[1,0])
     
     for point_n, ll in enumerate(lls):
-        pdb.set_trace()
-        xys[point_n, 0] = int(ll[0] - ll_upper_left[0])   / pixel_size['x']
-        xys[point_n, 1] = int((-1) * (ll[1] - ll_upper_left[1]))   / pixel_size['y']         # y needs flipping as down is positive in matrix notation
+        xys[point_n, 0] = int((ll[0] - ll_upper_left[0])   / pixel_size['x'])
+        xys[point_n, 1] = int(((-1) * (ll[1] - ll_upper_left[1]))   / pixel_size['y'])         # y needs flipping as down is positive in matrix notation
         
     return xys
 
