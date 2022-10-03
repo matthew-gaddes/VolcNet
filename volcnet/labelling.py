@@ -47,6 +47,7 @@ def label_volcnet_files(volcnet_files, def_min = 0.05):
             transient_defs = pickle.load(f)
         print(f"The interferograms are of size: {displacement_r3['mask'].shape}")
         #n_acq, ny, nx = displacement_r3['cumulative'].shape
+        
        
         for acq_n1, acq_1 in enumerate(tbaseline_info['acq_dates']):                                                # 
             for acq_n2, acq_2 in enumerate(tbaseline_info['acq_dates']):

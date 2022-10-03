@@ -8,6 +8,70 @@ Created on Tue May  3 12:33:40 2022
 
 import pdb
 
+#%%
+
+def plot_volcnet_files_labels(volcnet_files, labels_dyke, labels_sill, labels_atmo):
+    """ Given labels for a list of volcnet files, a plot showing how each files breaks down into labels, and a plot showing how each label breaks down into each file.  
+    
+    Inputs:
+        volcnet_files | list of strings | list of volcnet files to label.  
+        labels_dyke | many x 4 | Interferograms that are labelled as dyke.  First coumn is file number, second is acquisition 1, third is acquisition 2, fourth is deformation magnitude
+        labels_sill | many x 4 |
+        labels_atmo | many x 4 |
+            
+    Returns:
+        figure
+
+    History:
+        2022_10_03 | MEG | Written
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    
+    # 0:  work out the 2d matrix which compares each data file and how many of each label it has (so it has as many rows as files, and columns as labels)
+    labels_per_file = np.zeros((len(volcnet_files), 3))
+    for label_n in range(3):
+        if label_n == 0:                                                                        # if we're working with label 0, get the matrix of dykes
+            labels = labels_dyke
+        elif label_n == 1:                                                                      # ditto for sills
+            labels = labels_sill
+        elif label_n == 2:                                                                      # ditto for no atmosphere 
+            labels = labels_atmo
+        else:
+            raise Exception(f"This function only handles three labels.  ")
+
+        for file_n, volcnet_file in enumerate(volcnet_files):
+            labels_per_file[file_n, label_n] =  np.sum(labels[:,0] == file_n)                   # see how many labels are the same as the file number
+            
+    
+    # the figure.  
+    volcnet_files_short = [i.split('/')[-1][:-4] for i in volcnet_files]                            # list comprehension gets just the volcano (and frame name) - no path or extension.  
+    data_labels = ['dyke', 'sill', 'no def.']                                                       # the labels
+    
+    fig, axes = plt.subplots(1,2, figsize = (18,9))    
+    
+    #left hand subplot - how each file breaks down to different labels.  
+    bottom_y = np.zeros((1,len(volcnet_files_short)))                                                                                           # used to set where the bars start from
+    for label_n, label in enumerate(data_labels):                                                                                               # loop through each label
+        axes[0].bar(volcnet_files_short, height = labels_per_file[:, label_n], bottom = bottom_y[0,:], label = data_labels[label_n] )           # for that label, how many each file has of it
+        bottom_y += labels_per_file[:, label_n]                                                                                                 # update so next bar plots on top of this one.  
+    axes[0].legend()
+    axes[0].set_xticklabels(volcnet_files_short, rotation = 25, ha="right")                                                                     # 0' is horizontal
+    axes[0].set_ylabel('# of interferograms')
+    
+    # right hand plot - how each label breaks down by file.  
+    bottom_y = np.zeros((1,len(data_labels)))                                                                                                   # as above
+    for file_n, volcnet_file in enumerate(volcnet_files):                                                                                       # loop through each file
+        axes[1].bar(data_labels, height = labels_per_file[file_n, :], bottom = bottom_y[0,:], label = volcnet_files_short[file_n] )             # for that file, how many are in each label.  
+        bottom_y += labels_per_file[file_n, :]                                                                                                  # as asbove.  
+    axes[1].legend()
+    axes[1].set_ylabel('# of interferograms')
+
+    
+    fig.subplots_adjust(bottom=0.2)                                                                         # bit of a fudge to stop x labels going off
+
+#%%
+
 def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, 
                           acq_spacing = 5, ifg_resolution = 20, figsize_height = 10, labelling_function = None):
     """Visualise all the possible interferograms that can be formed from a VolcNet time series.  
