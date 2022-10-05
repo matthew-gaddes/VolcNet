@@ -54,27 +54,22 @@ def label_volcnet_files(volcnet_files, def_min = 0.05):
                 if acq_1 == acq_2:                                                                                                          # will just be zeros so ignore.   
                     pass                                                                                                                      # just leave as nans          
                 else:
-                    #ifg = displacement_r3['cumulative'][acq_n2,] - displacement_r3['cumulative'][acq_n1,]                                    # make the ifg between the two acquisitions.  
-                    def_predicted, sources, def_location = label_volcnet_ifg(f"{acq_1}_{acq_2}", persistent_defs, transient_defs)              # label the ifg, def_location is still in terms of lon and lat
-                    if (np.abs(def_predicted) < def_min):                                                                                    # if the deformation is less than the threshold selected       
-                        # def_magnitudes[acq_n1, acq_n2] = 0.                                                                                  # set deformation to 0.           
-                        # labels[acq_n1, acq_n2] = 2                                                                                           # and label as no def
-                        labels_atmo[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])
-                        labels_atmo = np.vstack((labels_atmo, np.nan * np.zeros((1, 4))))
-                    else:                                                                                                                    # else deformation is big enough
-         #               def_magnitudes[acq_n1, acq_n2] = def_predicted                                                                       # record deformation
+                    #ifg = displacement_r3['cumulative'][acq_n2,] - displacement_r3['cumulative'][acq_n1,]                                      # make the ifg between the two acquisitions.  
+                    def_predicted, sources, def_location = label_volcnet_ifg(f"{acq_1}_{acq_2}", persistent_defs, transient_defs)               # label the ifg, def_location is still in terms of lon and lat
+                    if (np.abs(def_predicted) < def_min):                                                                                       # if the deformation is less than the threshold selected       
+                        labels_atmo[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])                                                     # put the info for this ifg in the atmo array.  
+                        labels_atmo = np.vstack((labels_atmo, np.nan * np.zeros((1, 4))))                                                       # and extend the atmo array, ready for the next data
+                    else:                                                                                                                       # else deformation is big enough
                         if sources[0] == 'dyke':
-                            # labels[acq_n1, acq_n2] = 0                                                                                      # label as dyke                    
-                            labels_dyke[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])
-                            labels_dyke = np.vstack((labels_dyke, np.nan * np.zeros((1, 4))))
+                            labels_dyke[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])                                                 # if a dyke, put in the dyke array
+                            labels_dyke = np.vstack((labels_dyke, np.nan * np.zeros((1, 4))))                                                   # and extend array.  
                         elif sources[0] == 'sill':
-    #                        labels[acq_n1, acq_n2] = 1                                                                                      # label as sill
-                            labels_sill[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])
-                            labels_sill = np.vstack((labels_sill, np.nan * np.zeros((1, 4))))
+                            labels_sill[-1] = np.array([file_n, acq_n1, acq_n2, def_predicted])                                                 # if a sill, put in sill array.  
+                            labels_sill = np.vstack((labels_sill, np.nan * np.zeros((1, 4))))                                                   # and extend array    
         #data_indexs[volcnet_file.split('/')[-1]] = (def_magnitudes, labels)
-    labels_dyke = labels_dyke[:-1,:]
-    labels_sill = labels_sill[:-1,:]
-    labels_atmo = labels_atmo[:-1,:]
+    labels_dyke = labels_dyke[:-1,:]                                                                                                            # at end, remove last entry as this is the blank one added ready for the next loop.  
+    labels_sill = labels_sill[:-1,:]                                                                                                            # ditto for sill
+    labels_atmo = labels_atmo[:-1,:]                                                                                                            # ditto for atmo.  
     return labels_dyke, labels_sill, labels_atmo
 
 
