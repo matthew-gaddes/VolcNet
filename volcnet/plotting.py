@@ -73,7 +73,7 @@ def plot_volcnet_files_labels(volcnet_files, labels_dyke, labels_sill, labels_at
 #%%
 
 def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, 
-                          acq_spacing = 5, ifg_resolution = 20, figsize_height = 10, labelling_function = None):
+                          acq_spacing = 5, ifg_resolution = 20, figsize_height = 10, labelling_function = None, title = None):
     """Visualise all the possible interferograms that can be formed from a VolcNet time series.  
     
     Inputs:
@@ -289,6 +289,10 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
     ax_transient.set_ylabel('Transient\ndeformation (m)', color=colour, fontsize= 10)  # we already handled the x-label with ax1
     ax_transient.tick_params(axis='y', labelcolor=colour)
     ax_labels.set_ylabel('Persistent\ndeformation (m/yr)', fontsize = 10)
+    
+    if title is not None:
+        fig.suptitle(title)
+        fig.canvas.manager.set_window_title(title)
                 
 
 

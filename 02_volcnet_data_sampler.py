@@ -23,7 +23,7 @@ from datetime import datetime
 
 import volcnet
 from volcnet.plotting import volcnet_ts_visualiser
-from volcnet.labelling import volcnet_labeller
+from volcnet.labelling import label_volcnet_ifg
 
 
 # sys.path.append("/home/matthew/university_work/23_insar_tools")                  # 
@@ -55,8 +55,10 @@ volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')))            # get t
 #     print("TESTING - only using Campi Flegrei volcnet file.  ")
 # for volcnet_file in volcnet_files[11:12]:
 #     print("TESTING - only using Wolf volcnet file.  ")
-for volcnet_file in volcnet_files[11:12]:
-    print("TESTING - only using Sierra Negra 128 volcnet file.  ")
+# for volcnet_file in volcnet_files[11:12]:
+#     print("TESTING - only using Sierra Negra 128 volcnet file.  ")
+for volcnet_file in volcnet_files[1:3]:
+    
     
     # 1: Open the file
     with open(volcnet_file, 'rb') as f:
@@ -67,7 +69,7 @@ for volcnet_file in volcnet_files[11:12]:
 
     #print(volcnet_file)
     volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, acq_spacing = 1, ifg_resolution = 20, figsize_height = 10,
-                          labelling_function = volcnet_labeller)
+                          labelling_function = label_volcnet_ifg, title = Path(volcnet_file).parts[-1].split('.')[0])                                               # last part gets the frane name from the path, regardless of operating system.  
     
     
 
@@ -97,6 +99,6 @@ for volcnet_file in volcnet_files[11:12]:
 
 #def_predicted = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)
 #def_predicted, sources, def_location = volcnet_labeller("20180526_20180713", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
-def_predicted, sources, def_location = volcnet_labeller("20180713_20180526", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
+def_predicted, sources, def_location = label_volcnet_ifg("20180713_20180526", persistent_defs, transient_defs)                      # Sierra Negra co-eruptive 2018 interferograms.  
 
 
