@@ -57,7 +57,7 @@ volcnet_files = sorted(glob.glob(str(volcnet_dir / '*.pkl')))            # get t
 #     print("TESTING - only using Wolf volcnet file.  ")
 # for volcnet_file in volcnet_files[11:12]:
 #     print("TESTING - only using Sierra Negra 128 volcnet file.  ")
-for volcnet_file in volcnet_files[1:3]:
+for volcnet_file in volcnet_files:
     
     
     # 1: Open the file
@@ -67,7 +67,7 @@ for volcnet_file in volcnet_files[1:3]:
         persistent_defs = pickle.load(f)
         transient_defs = pickle.load(f)
 
-    #print(volcnet_file)
+    print(volcnet_file)
     volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, transient_defs, acq_spacing = 1, ifg_resolution = 20, figsize_height = 10,
                           labelling_function = label_volcnet_ifg, title = Path(volcnet_file).parts[-1].split('.')[0])                                               # last part gets the frane name from the path, regardless of operating system.  
     

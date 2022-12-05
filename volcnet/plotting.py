@@ -208,8 +208,9 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
     n_acq_plot, ny_plot, nx_plot = cumulative_r3_small.shape                                                                         # 
     figure = ma.zeros((n_acq_plot * ifg_resolution, n_acq_plot * ifg_resolution))                                                    # create a giant ma array of zeros to hold all the one channel images.  
 
+    print("Row", end = '')
     for row_n in range(n_acq_plot):                                                                                                  # loop down one row.  
-        print(f"row {row_n}")
+        print(f" {row_n}", end = '')
         cumulative_r3_small -= cumulative_r3_small[row_n,]                                                                           # make the time series relative to this acquisition number.  
         for col_n in range(n_acq_plot):
             if col_n == row_n:                                                                                                       # if on the diagonal, make a square of zeros so it stands out
@@ -218,6 +219,7 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
                 mini_ifg = cumulative_r3_small[col_n,]                                                                              # for all others just get the ifg.  
             figure[row_n*ifg_resolution : (row_n + 1) *ifg_resolution,  
                    col_n*ifg_resolution : (col_n + 1) *ifg_resolution,] = mini_ifg                                                  # put the ifg in the correct place on the giant figure.              
+    print('\n')
             
     
 
@@ -269,26 +271,27 @@ def volcnet_ts_visualiser(displacement_r3, tbaseline_info, persistent_defs, tran
     d0_dt = datetime.strptime(tbaseline_info['acq_dates'][0], '%Y%m%d')
     ax_labels.set_xlim(tbaseline_info['baselines_cumulative'][0], tbaseline_info['baselines_cumulative'][-1])
     
+    colour_persistnet = 'tab:orange'
+    colour_transient = 'tab:blue'
+    
     for persistent_def in persistent_defs:
-        colour = 'tab:orange'
         x_start = (datetime.strptime(str(persistent_def["def_episode_start"]), '%Y%m%d') - d0_dt).days
         x_stop = (datetime.strptime(str(persistent_def["def_episode_stop"]), '%Y%m%d') - d0_dt).days
-        ax_transient.plot((x_start, x_stop), (persistent_def["def_rate"], persistent_def["def_rate"]), c = colour)
+        ax_transient.plot((x_start, x_stop), (persistent_def["def_rate"], persistent_def["def_rate"]), c = colour_persistnet)
         
     for transient_def in transient_defs:
-        colour = 'tab:blue'
+
         x_start = (datetime.strptime(str(transient_def["def_episode_start"]), '%Y%m%d') - d0_dt).days
         x_stop = (datetime.strptime(str(transient_def["def_episode_stop"]), '%Y%m%d') - d0_dt).days
-        ax_transient.plot((x_start, x_stop), (transient_def["def_magnitude"], transient_def["def_magnitude"]), c = colour)
-
+        ax_transient.plot((x_start, x_stop), (transient_def["def_magnitude"], transient_def["def_magnitude"]), c = colour_transient)
 
 
     xticks_every_nmonths(ax_labels, tbaseline_info['acq_dates'][0], tbaseline_info['baselines_cumulative'], include_tick_labels = True,                  # update x ticks, but with labels.  
                          major_ticks_n_months = 12, minor_ticks_n_months = 3)
 
-    ax_transient.set_ylabel('Transient\ndeformation (m)', color=colour, fontsize= 10)  # we already handled the x-label with ax1
-    ax_transient.tick_params(axis='y', labelcolor=colour)
-    ax_labels.set_ylabel('Persistent\ndeformation (m/yr)', fontsize = 10)
+    ax_transient.set_ylabel('Transient\ndeformation (m)', color=colour_transient, fontsize= 10)  # we already handled the x-label with ax1
+    ax_transient.tick_params(axis='y', labelcolor=colour_transient)
+    ax_labels.set_ylabel('Persistent\ndeformation (m/yr)', color=colour_persistnet, fontsize = 10)
     
     if title is not None:
         fig.suptitle(title)
