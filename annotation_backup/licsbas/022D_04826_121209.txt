@@ -1,9 +1,0 @@
-[persistent_deformation_00]
-def_lon_west = 14.11
-def_lon_east = 14.17
-def_lat_south = 40.81
-def_lat_north = 40.84
-def_rate = 0.07
-def_episode_start = 20141031
-def_episode_stop = 20210912
-source = sill
