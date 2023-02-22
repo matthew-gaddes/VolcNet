@@ -1,5 +1,5 @@
 # VolcNet
-A database of labelled Sentinel-1 data featuring examples of volcanic unrest.  
+A database of labelled Sentinel-1 data featuring examples of volcanic unrest.  Part of this work was carried out in the frame of the project “Volcano Monitoring using Deep Learning (https://eo4society.esa.int/projects/vmdl/ )“, under the Living Planet Fellowship programme of, and funded by, the European Space Agency. Disclaimer: the view expressed here can in no way be taken to reflect the official opinion of the European Space Agency.  
 
 
 
