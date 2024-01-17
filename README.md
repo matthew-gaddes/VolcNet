@@ -4,9 +4,6 @@ A database of labelled Sentinel-1 data featuring examples of volcanic unrest.  P
 
 
 
-# Version 3.X 
-The first version of this is due in early 2023 and will feature a more accisible file format and a significant increase in the number of volcanoes.  
-
 
 # Version 2.X 
 Features the data that can be used to create ~500,000 labelled interferograms.  The updates are detailed in version three of "Simultaneous classification and location of volcanicdeformation in SAR interferograms using deep learningand the VolcNet database" (https://eartharxiv.org/repository/view/1969/), but to summarise we swtich to using time series with labels of the duration and magnitude of deformation, and then automatically create labelled interferograms between any two acquisitions in the time series.  
