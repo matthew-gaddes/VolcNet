@@ -17,6 +17,7 @@ Pseudo code
 print("Started")
 
 import numpy as np
+import numpy.ma as ma
 import matplotlib.pyplot as plt
 import sys
 import os
@@ -369,15 +370,14 @@ def all_eruptions_one_volc(eruptions):
 #         plt.close(fig)
         
 
-
-
-def plot_volcano_results(image: np.ndarray, date_strings: list, 
+def plot_volcano_results(image: np.ndarray, dem_image: np.ndarray, date_strings: list, 
                          intervals: list, png_path=None, title=None):
     """
     Plots:
-      1. The last image from a rank-3 image array (occupying 4/5 of the vertical space)
-      2. The time series of the pixel with the largest absolute value (occupying 1/5 of the vertical space)
-      3. For each date interval (in the form 'yyyymmdd_yyyymmdd'), a horizontal line is drawn on the time
+      1. The last image from a rank-3 image array (occupying the left half of the top row)
+      2. The DEM image on the right half of the top row (using the 'terrain' colormap)
+      3. The time series of the pixel with the largest absolute value (occupying the full width of the bottom row)
+      4. For each date interval (formatted as 'yyyymmdd_yyyymmdd'), a horizontal line is drawn on the time
          series plot with dots at both ends.
     
     The legend for the time series plot is placed outside (to the right) of its axis.
@@ -385,6 +385,8 @@ def plot_volcano_results(image: np.ndarray, date_strings: list,
     Parameters:
       image : np.ndarray
         A rank-3 image array with shape (T, H, W) where T is time.
+      dem_image : np.ndarray
+        A 2D array (H, W) representing the DEM image (assumed to have the same shape as each frame in `image`).
       date_strings : list of str
         A list of dates corresponding to each image frame, in the format 'yyyymmdd'.
       intervals : list of str
@@ -392,31 +394,65 @@ def plot_volcano_results(image: np.ndarray, date_strings: list,
       png_path : str, optional
         If provided, the figure will be saved to this path.
       title : str, optional
-        Title for the top image panel.
+        Title for the left image panel.
     """
-    # Convert the date strings into datetime objects
+    
+    def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+        """ Take a colorbar and crop it.  Useful for removing blue parts of "terrain""
+        """
+        import matplotlib.colors as colors
+        import numpy as np
+        
+        new_cmap = colors.LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+        return new_cmap 
+    
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
+
+
+    
+    # Convert date strings into datetime objects.
     time_dates = [datetime.strptime(date, "%Y%m%d") for date in date_strings]
     
-    # Create a figure with two subplots:
-    # - The top axis (ax_img) takes 4/5 of the vertical space to display the image.
-    # - The bottom axis (ax_ts) takes 1/5 of the space for the time series.
-    fig, (ax_img, ax_ts) = plt.subplots(2, 1, figsize=(12, 10), 
-                                          gridspec_kw={'height_ratios': [4, 1]})
+    # Create the figure and GridSpec layout:
+    # - 2 rows and 2 columns, with the top row (images) having a height ratio of 4 and bottom row (time series) 1.
+    # - The time series spans both columns.
+    fig = plt.figure(figsize=(12, 10))
+    gs = GridSpec(nrows=2, ncols=2, height_ratios=[4, 1], width_ratios=[1, 1], wspace=0.3)
     
-    # ----- Top Panel: Show the Last Image -----
+    # Top row: left panel for the primary image and right panel for the DEM.
+    ax_img = fig.add_subplot(gs[0, 0])
+    ax_dem = fig.add_subplot(gs[0, 1])
+    # Bottom row: time series across both columns.
+    ax_ts = fig.add_subplot(gs[1, :])
+    
+    # ----- Top Left Panel: Plot the Last Image -----
+    # Take the last frame from the rank-3 image array.
     last_image = image[-1]
     im = ax_img.imshow(last_image)
     if title is not None:
         ax_img.set_title(title)
-    fig.colorbar(im, ax=ax_img)
+    cbar = fig.colorbar(im, ax=ax_img)
+    cbar.set_label("LOS Displacement (m)")
     
-    # ----- Identify the Pixel of Interest -----
+    # ----- Top Right Panel: Plot the DEM Image -----
+    terrain_cmap = truncate_colormap(
+        plt.get_cmap('terrain') , 0.2, 1
+        )
+    dem_im = ax_dem.imshow(dem_image, cmap=terrain_cmap)
+    ax_dem.set_title("DEM")
+    cbar_dem = fig.colorbar(dem_im, ax=ax_dem)
+    cbar_dem.set_label("Elevation (m)")
+    
+    # ----- Identify the Pixel of Interest (for the time series) -----
     # For each pixel location (i,j), compute its maximum absolute value over time.
     max_abs_per_pixel = np.max(np.abs(image), axis=0)
     # Get the (row, column) index of the pixel with the largest absolute value.
     pixel_idx = np.unravel_index(np.argmax(max_abs_per_pixel), max_abs_per_pixel.shape)
     print("Pixel with max absolute value is at:", pixel_idx)
-    
     # Extract the time series for that pixel over all time steps.
     pixel_series = image[:, pixel_idx[0], pixel_idx[1]]
     
@@ -426,11 +462,10 @@ def plot_volcano_results(image: np.ndarray, date_strings: list,
         label='Max. deformation'
     )
     ax_ts.set_xlabel("Date")
-    ax_ts.set_ylabel("Pixel Value")
+    ax_ts.set_ylabel("LOS Displacement (m)")
     ax_ts.set_title("Time Series of Pixel with Largest Absolute Value")
     
     # Determine a baseline y-value for the intervals.
-    # We choose a base value a bit below the minimum of the pixel_series.
     y_min = np.min(pixel_series)
     y_range = np.ptp(pixel_series)  # peak-to-peak value (max - min)
     offset = 0.1 * y_range if y_range != 0 else 1.0
@@ -438,14 +473,13 @@ def plot_volcano_results(image: np.ndarray, date_strings: list,
 
     # Use a discrete color palette (tab10) for the intervals.
     colors = plt.cm.tab10.colors
-
     # Plot each interval as a horizontal line with dots at both ends.
     for idx, interval in enumerate(intervals):
         # Split the interval string "yyyymmdd_yyyymmdd" into start and end dates.
         start_str, end_str = interval.split('_')
         start_date = datetime.strptime(start_str, "%Y%m%d")
         end_date = datetime.strptime(end_str, "%Y%m%d")
-        # Offset each interval vertically slightly to avoid overlap.
+        # Offset the interval vertically slightly to avoid overlap.
         y_interval = base_y - idx * (offset * 0.5)
         color = colors[idx % len(colors)]
         # Draw the horizontal line representing the interval.
@@ -456,19 +490,16 @@ def plot_volcano_results(image: np.ndarray, date_strings: list,
                    color=color, markersize=8)
     
     # Place the legend to the right of the time series axis.
-    # Using bbox_to_anchor with a slight offset ensures the legend is drawn
-    # outside the time series axes without modifying the layout of the upper image.
     ax_ts.legend(loc='center left', bbox_to_anchor=(1.02, 0.5))
     
-    # Use tight_layout with a rect parameter to reserve space on the right for the legend,
-    # without shifting the image axes.
+    # Adjust the layout to leave space for the external legend without shifting the top panels.
     plt.tight_layout(rect=[0, 0, 0.95, 1])
     plt.show()
     
     if png_path is not None:
         fig.savefig(png_path)
         plt.close(fig)
-
+            
 
 #%%
 
@@ -512,10 +543,13 @@ jasmin_local_dir = Path('./jasmin_clones')
 volcnet_outdir = Path('./volcnet_labelled_data')
 
 # delete local .json files after use (to save space)
-cleanup_json = False
+cleanup_json = True
 
 # overlap_required
 
+
+# supress figures
+plt.switch_backend('Agg')
 
 #%% Open Smithsonian data, mappings (volc_id to name), 
 # and comet frame names
@@ -547,86 +581,142 @@ eruptions_by_volc = sorted(
     )
 
 
-# iterate over only Fagradalsfjall
-# for volcano_name, eruptions in eruptions_by_volc[28:29]:
-    
-# Fernandina
-for volcano_name, eruptions in eruptions_by_volc[29:30]:
-#for volcano_name, eruptions in eruptions_by_volc:
-    print(f"Volcano Name: {volcano_name}")
-    
-    # get all the eruptions for that volcano
-    eruption_dates = all_eruptions_one_volc(eruptions)
-    
-    
-    # get the volcano_number (there hsould only be 1)
-    unique_numbers = eruptions['Volcano Number'].unique()
-    if len(unique_numbers) == 1:
-        volc_n = unique_numbers[0]
-    else:
-        raise Exception(
-            f"Multiple volcano numbers were found for what is supposed to be "
-            f"one volcano.  Exiting.  "  
-            )
-    
-    
-    # conver that to a jasmin name (assume only one can be returned)
-    if len(mappings[mappings.iloc[:, 1] == volc_n]['jasmin_name']) == 0:
-        raise Exception(
-            f"The Smithsonian 'volcano number' was not found in the COMET "
-            "mappings (i.e. the volcano doesn't exist as a COMET volcano "
-            "frame.  ")
-    jasmin_name = mappings[mappings.iloc[:, 1] == volc_n]['jasmin_name'].values[0]
-    
-    # get the comet frames for that volcano (possibly local, or download)
-    frames = name_to_comet_frame_name(comet_frame_names, jasmin_name)
-    for frame in frames:
-        json_path = check_or_download(
-            jasmin_local_dir, region = frame[0], file = frame[1]
-            )
-        
-        # open it (can be slow)
-        outputs = LiCSBAS_json_to_LiCSAlert(
-            json_path,  crop_side_length = None, mask_type = 'nan_variable'
-            )
-        _, displacement_r3, tbaseline_info, ref_xy, json_time = outputs
-
-        # could add something to check if eruption dates overlap         
-
-        # make sure the outdir exsits:
-        (volcnet_outdir / frame[0]).mkdir(parents=True, exist_ok=True)
-
-        # make the png
-        plot_volcano_results(
-            displacement_r3['cumulative'], tbaseline_info['acq_dates'],
-            eruption_dates, 
-            png_path=volcnet_outdir / frame[0] / f"{json_path.stem}.png",
-            title = json_path.stem
-            )
+       
                 
-        # save the time series and label (remove some un-needed first)
-        del displacement_r3['cumulative']
-        del tbaseline_info['ifg_dates']; del tbaseline_info['baselines']
-        del tbaseline_info['baselines_cumulative']
-        
-        pkl_name = volcnet_outdir / frame[0] / f"{json_path.stem}.pkl"
-        with open(pkl_name , 'wb') as f:
-            pickle.dump(displacement_r3, f)
-            pickle.dump(tbaseline_info, f)
-            # from v2 of volcnet
-            # pickle.dump(persistent_defs, f)
-            # pickle.dump(transient_defs, f)
-            pickle.dump(eruption_dates, f)
-        f.close()      
+for volcano_name, eruptions in eruptions_by_volc:
+    print(f"Volcano Name: {volcano_name}")
 
+    # Get eruption dates for this volcano.
+    try:
+        eruption_dates = all_eruptions_one_volc(eruptions)
+    except Exception as e:
+        print(f"Error getting eruption dates for {volcano_name}: {e}")
+        continue
+
+    # Get the volcano number (there should be exactly one).
+    try:
+        unique_numbers = eruptions['Volcano Number'].unique()
+        if len(unique_numbers) != 1:
+            raise Exception(
+                "Multiple volcano numbers found for a single volcano."
+                )
+        volc_n = unique_numbers[0]
+    except Exception as e:
+        print(f"Error with Volcano Number for {volcano_name}: {e}")
+        continue
+
+    # Convert volcano number to a jasmin name using the mappings.
+    try:
+        mapping = mappings[mappings.iloc[:, 1] == volc_n]['jasmin_name']
+        if mapping.empty:
+            raise Exception("Volcano number not found in COMET mappings.")
+        jasmin_name = mapping.values[0]
+    except Exception as e:
+        print(
+            f"Error converting Volcano Number to jasmin name for"
+            f" {volcano_name}: {e}"
+            )
+        continue
+
+    # Get the comet frames for that volcano.
+    try:
+        frames = name_to_comet_frame_name(comet_frame_names, jasmin_name)
+    except Exception as e:
+        print(f"Error retrieving COMET frames for {volcano_name}: {e}")
+        continue
+
+    # Process each frame.
+    for frame in frames:
+        try:
+            json_path = check_or_download(
+                jasmin_local_dir, region=frame[0], file=frame[1]
+                )
+        except Exception as e:
+            print(
+                f"Error in check_or_download for {volcano_name}, frame "
+                "{frame}: {e}"
+                )
+            continue
+
+        try:
+            outputs = LiCSBAS_json_to_LiCSAlert(
+                json_path, crop_side_length=None, mask_type='nan_variable'
+            )
+            _, displacement_r3, tbaseline_info, ref_xy, json_time = outputs
+
+            # Create DEM water mask.
+            displacement_r3['water_mask'] = (displacement_r3['dem'] < 1.e-19)
+        except Exception as e:
+            print(
+                f"Error opening the json file or creating the water mask "
+                "for {volcano_name}, frame {frame}: {e}"
+                )
+            continue
+
+        try:
+            # Ensure the output directory exists.
+            (volcnet_outdir / frame[0]).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Error creating output directory for {volcano_name}, frame {frame}: {e}")
+            continue
+
+        try:
+            # Create the PNG plot.
+            plot_volcano_results(
+                displacement_r3['cumulative'],
+                ma.array(
+                    displacement_r3['dem'], 
+                    mask = displacement_r3['water_mask']
+                    ),
+                tbaseline_info['acq_dates'],
+                eruption_dates, 
+                png_path=volcnet_outdir / frame[0] / f"{json_path.stem}.png",
+                title=json_path.stem
+            )
             
-        # delete the .json
+        except Exception as e:
+            print(
+                f"Error plotting volcano results for {volcano_name}, frame "
+                "{frame}: {e}"
+                )
+            continue
+
+        try:
+            # Remove unneeded keys.
+            del displacement_r3['cumulative']
+            del tbaseline_info['ifg_dates']
+            del tbaseline_info['baselines']
+            del tbaseline_info['baselines_cumulative']
+            
+            # Save the processed data to a pickle file.
+            pkl_name = volcnet_outdir / frame[0] / f"{json_path.stem}.pkl"
+            with open(pkl_name, 'wb') as f:
+                pickle.dump(displacement_r3, f)
+                pickle.dump(tbaseline_info, f)
+                pickle.dump(eruption_dates, f)
+        except Exception as e:
+            print(
+                f"Error saving pickle for {volcano_name}, frame {frame}: {e}"
+                )
+            continue
+
         if cleanup_json:
-            print(f"Deleting {json_path} to save disk space")
-            json_path.unlink()
-            
+            try:
+                print(f"Deleting {json_path} to save disk space")
+                json_path.unlink()
+            except Exception as e:
+                print(
+                    f"Error deleting JSON file {json_path} for {volcano_name} "
+                    ", frame {frame}: {e}"
+                    )
+                continue
         
             
+
+#%% Filter after making all of them
+
+
+
 
 #%%
 
